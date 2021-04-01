@@ -1,4 +1,0 @@
-B:\JetBrains\Toolbox\bin\apps\CLion\ch-0\203.7717.62\bin\cmake\win\bin\cmake.exe -G "CodeBlocks - MinGW Makefiles" B:\Git\TEI-ImageMP
--- Configuring done
--- Generating done
--- Build files have been written to: B:/Git/TEI-ImageMP/build

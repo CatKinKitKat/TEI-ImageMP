@@ -38,8 +38,9 @@ int main(int argc, char **argv)
     GY[2][1] = -2;
     GY[2][2] = -1;
 
+    const char *fileName = "./gray4k.tif";
     cout << argv[1] << endl;
-    CImg<unsigned char> image(argv[1]);
+    CImg<unsigned char> image(fileName);
     w = image.width();
     h = image.height();
 
