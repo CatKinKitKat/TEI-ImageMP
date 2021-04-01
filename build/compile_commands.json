@@ -1,0 +1,7 @@
+[
+{
+  "directory": "B:/Git/TEI-ImageMP/build",
+  "command": "C:\\PROGRA~1\\MINGW-~1\\X86_64~1.0-P\\mingw64\\bin\\G__~1.EXE    -O3 -DNDEBUG   -std=gnu++2a -o CMakeFiles\\TEI_ImageMP.dir\\jasnau.cpp.obj -c B:\\Git\\TEI-ImageMP\\jasnau.cpp",
+  "file": "B:/Git/TEI-ImageMP/jasnau.cpp"
+}
+]

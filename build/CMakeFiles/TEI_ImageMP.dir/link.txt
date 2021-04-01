@@ -1,0 +1,3 @@
+B:\JetBrains\Toolbox\bin\apps\CLion\ch-0\203.7717.62\bin\cmake\win\bin\cmake.exe -E rm -f CMakeFiles\TEI_ImageMP.dir/objects.a
+C:\PROGRA~1\MINGW-~1\X86_64~1.0-P\mingw64\bin\ar.exe cr CMakeFiles\TEI_ImageMP.dir/objects.a @CMakeFiles\TEI_ImageMP.dir\objects1.rsp
+C:\PROGRA~1\MINGW-~1\X86_64~1.0-P\mingw64\bin\G__~1.EXE    -Wl,--whole-archive CMakeFiles\TEI_ImageMP.dir/objects.a -Wl,--no-whole-archive  -o TEI_ImageMP.exe -Wl,--out-implib,libTEI_ImageMP.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\TEI_ImageMP.dir\linklibs.rsp

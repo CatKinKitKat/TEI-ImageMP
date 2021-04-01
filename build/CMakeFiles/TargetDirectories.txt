@@ -1,0 +1,3 @@
+B:/Git/TEI-ImageMP/build/CMakeFiles/TEI_ImageMP.dir
+B:/Git/TEI-ImageMP/build/CMakeFiles/edit_cache.dir
+B:/Git/TEI-ImageMP/build/CMakeFiles/rebuild_cache.dir
