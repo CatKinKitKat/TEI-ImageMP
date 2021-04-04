@@ -5,59 +5,50 @@
 using namespace std;
 using namespace cimg_library;
 
+CImg<unsigned char> sobel(CImg<unsigned char> image) {
+
+
+    CImg<unsigned char> oimage(image.width(), image.height());
+
+    return oimage;
+}
+
 int main() {
 
-    int GX[3][3];
-    int GY[3][3];
+    const char *fileName = "./gray4k.tif";
+    CImg<unsigned char> img = CImg<unsigned char>(fileName);
 
-    GX[0][0] = 1;
-    GX[0][1] = 0;
-    GX[0][2] = -1;
-    GX[1][0] = 2;
-    GX[1][1] = 0;
-    GX[1][2] = -2;
-    GX[2][0] = 1;
-    GX[2][1] = 0;
-    GX[2][2] = -1;
+    int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
 
-    GY[0][0] = 1;
-    GY[0][1] = 2;
-    GY[0][2] = 1;
-    GY[1][0] = 0;
-    GY[1][1] = 0;
-    GY[1][2] = 0;
-    GY[2][0] = -1;
-    GY[2][1] = -2;
-    GY[2][2] = -1;
+    int width = img.width();
+    int height = img.height();
+    CImg<unsigned char> output = CImg<unsigned char>(width, height, 1, 1, 0.0);
 
-    const char *fileName = "./lion4k.jpg";
-    CImg<float> img = CImg<float>(fileName);
 
-    int colunas = img.width();
-    int linhas = img.height();
-    CImg<float> output = CImg<float>(colunas, linhas, 1, 1, 0.0);
-
-    cout << colunas << endl;
-    cout << linhas << endl;
-
-    CImg<float> imgData[12];
+    CImg<unsigned char> imgChunks[numCPU];
+    char *imgPartName;
 
     int lineCounter = 0;
-    int columnCounter = 0;
-    for (int i = 0; i < 12; i++) {
-        imgData[i] = img.get_crop(lineCounter, columnCounter, lineCounter + 960, columnCounter + 720);
-        if (lineCounter + 960 > 3840) {
-            lineCounter = 0;
-            columnCounter += 720;
-        } else {
-            lineCounter += 980;
-        }
-        imgData[i].save("imagem%d.pgm", i);
+    int step = (width / numCPU);
+
+    cout << width << "x" << height << endl << numCPU << " CPUs" << endl;
+
+    for (int i = 0; i < numCPU; i++) {
+        imgPartName = (char *) malloc(8 * sizeof(char));
+        imgChunks[i] = img.get_crop(lineCounter, 0, (lineCounter + step) - 1, height);
+        lineCounter += step;
+
+        cout << "New " << step << "x" << height << " chunk." << endl;
+
+        sprintf(imgPartName, "imagem%i.tif", i);
+        imgChunks[i].save_tiff(imgPartName);
+        free(imgPartName);
     }
 
-#pragma omp parallel
-    {
-
+    CImg<unsigned char> oimage(width, height);
+    for (int j = 0; j < numCPU; j++) {
+        //oimage.draw_image(0, (j + step), sobel(imgChunks[j]));
     }
+
     return 0;
 }

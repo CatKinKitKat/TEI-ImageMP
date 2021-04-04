@@ -2,11 +2,11 @@
 #include "CImg.h"
 #include <fstream>
 #include <cmath>
+
 using namespace cimg_library;
 using namespace std;
 
-int main(int argc, char **argv)
-{
+int main() {
 
     int w;
     int h;
@@ -39,81 +39,56 @@ int main(int argc, char **argv)
     GY[2][2] = -1;
 
     const char *fileName = "./gray4k.tif";
-    cout << argv[1] << endl;
-    CImg<unsigned char> image(fileName);
+    CImg<float> image = CImg<float>(fileName);
     w = image.width();
     h = image.height();
 
     const unsigned int width = w;
     const unsigned int height = h;
 
-    cout << "Width is : " << width << " and height is : " << height << endl;
 
-    ofstream myfile;
-    myfile.open("pxl.txt", ios::out);
     int **px;
-    px = new int *[width];
-    for (y = 0; y < height; y++)
+#pragma omp parallel
     {
-        px[y] = new int[height];
-        for (x = 0; x < width; x++)
-        {
-            px[y][x] = image(x, y);
-            myfile << (unsigned char)image(x, y) << "\t";
-        }
-        myfile << "\n";
-    }
-    myfile.close();
-
-    myfile.open("conv.txt", ios::out);
-    for (y = 0; y < image.height(); y++)
-    {
-        for (x = 0; x < image.width(); x++)
-        {
-            sumX = 0;
-            sumY = 0;
-            if (y == 0 || y == image.height() - 1)
-                SUM = 0;
-            else if (x == 0 || x == image.width() - 1)
-                SUM = 0;
-            else
-            {
-                for (int i = -1; i < 2; i++)
-                {
-                    for (int j = -1; j < 2; j++)
-                    {
-                        sumX = sumX + GX[j + 1][i + 1] * (int)image(x + j, y + i);
+        px = new int *[width];
+#pragma omp for schedule(static)
+        for (y = 0; y < image.height(); y++) {
+            px[y] = new int[height];
+            for (x = 0; x < image.width(); x++) {
+                sumX = 0;
+                sumY = 0;
+                if (y == 0 || y == image.height() - 1)
+                    SUM = 0;
+                else if (x == 0 || x == image.width() - 1)
+                    SUM = 0;
+                else {
+                    for (int i = -1; i < 2; i++) {
+                        for (int j = -1; j < 2; j++) {
+                            sumX = sumX + GX[j + 1][i + 1] * (int) image(x + j, y + i);
+                        }
                     }
+
+                    for (int i = -1; i < 2; i++) {
+                        for (int j = -1; j < 2; j++) {
+                            sumY = sumY + GY[j + 1][i + 1] * (int) image(x + j, y + i);
+                        }
+                    }
+                    SUM = sqrt(pow((double) sumX, 2) + pow((double) sumY, 2));
                 }
 
-                for (int i = -1; i < 2; i++)
-                {
-                    for (int j = -1; j < 2; j++)
-                    {
-                        sumY = sumY + GY[j + 1][i + 1] * (int)image(x + j, y + i);
-                    }
-                }
-                SUM = sqrt(pow((double)sumX, 2) + pow((double)sumY, 2));
+                if (SUM > 255)
+                    SUM = 255;
+                if (SUM < 0)
+                    SUM = 0;
+                float newPixel = (255 - (float) (SUM));
+                px[y][x] = newPixel;
             }
-
-            if (SUM > 255)
-                SUM = 255;
-            if (SUM < 0)
-                SUM = 0;
-            unsigned char newPixel = (255 - (unsigned char)(SUM));
-            px[y][x] = newPixel;
-            myfile << px[y][x] << "\t";
         }
-        myfile << "\n";
     }
 
-    myfile.close();
-
-    CImg<unsigned char> oimage(width, height);
-    for (y = 0; y < image.height(); y++)
-    {
-        for (x = 0; x < image.width(); x++)
-        {
+    CImg<float> oimage(width, height, 1, 1, 0.0);
+    for (y = 0; y < image.height(); y++) {
+        for (x = 0; x < image.width(); x++) {
             oimage(x, y) = px[y][x];
         }
     }
