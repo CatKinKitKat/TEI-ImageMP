@@ -1,54 +1,98 @@
 #include <iostream>
-#include <omp.h>
 #include "CImg.h"
+#include <fstream>
+#include <cmath>
 
-using namespace std;
 using namespace cimg_library;
-
-CImg<unsigned char> sobel(CImg<unsigned char> image) {
-
-
-    CImg<unsigned char> oimage(image.width(), image.height());
-
-    return oimage;
-}
+using namespace std;
 
 int main() {
 
+    int w;
+    int h;
+    int SUM;
+    int sumX, sumY;
+    int y;
+    int x;
+
+    int GX[3][3];
+    int GY[3][3];
+
+    GX[0][0] = 1;
+    GX[0][1] = 0;
+    GX[0][2] = -1;
+    GX[1][0] = 2;
+    GX[1][1] = 0;
+    GX[1][2] = -2;
+    GX[2][0] = 1;
+    GX[2][1] = 0;
+    GX[2][2] = -1;
+
+    GY[0][0] = 1;
+    GY[0][1] = 2;
+    GY[0][2] = 1;
+    GY[1][0] = 0;
+    GY[1][1] = 0;
+    GY[1][2] = 0;
+    GY[2][0] = -1;
+    GY[2][1] = -2;
+    GY[2][2] = -1;
+
     const char *fileName = "./gray4k.tif";
-    CImg<unsigned char> img = CImg<unsigned char>(fileName);
+    CImg<float> image = CImg<float>(fileName);
+    w = image.width();
+    h = image.height();
 
-    int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
-
-    int width = img.width();
-    int height = img.height();
-    CImg<unsigned char> output = CImg<unsigned char>(width, height, 1, 1, 0.0);
+    const unsigned int width = w;
+    const unsigned int height = h;
 
 
-    CImg<unsigned char> imgChunks[numCPU];
-    char *imgPartName;
+    int **px;
+#pragma omp parallel
+    {
+        px = new int *[height];
+#pragma omp for schedule(static)
+        for (x = 0; x < image.width(); x++) {
+            px[x] = new int[width];
+            for (y = 0; y < image.height(); y++) {
+                sumX = 0;
+                sumY = 0;
+                if (x == 0 || x == image.width() - 1)
+                    SUM = 0;
+                else if (y == 0 || y == image.height() - 1)
+                    SUM = 0;
+                else {
+                    for (int i = -1; i < 2; i++) {
+                        for (int j = -1; j < 2; j++) {
+                            sumX = sumX + GX[j + 1][i + 1] * (int) image(x + j, y + i);
+                        }
+                    }
 
-    int lineCounter = 0;
-    int step = (width / numCPU);
+                    for (int i = -1; i < 2; i++) {
+                        for (int j = -1; j < 2; j++) {
+                            sumY = sumY + GY[j + 1][i + 1] * (int) image(x + j, y + i);
+                        }
+                    }
+                    SUM = sqrt(pow((double) sumX, 2) + pow((double) sumY, 2));
+                }
 
-    cout << width << "x" << height << endl << numCPU << " CPUs" << endl;
-
-    for (int i = 0; i < numCPU; i++) {
-        imgPartName = (char *) malloc(8 * sizeof(char));
-        imgChunks[i] = img.get_crop(lineCounter, 0, (lineCounter + step) - 1, height);
-        lineCounter += step;
-
-        cout << "New " << step << "x" << height << " chunk." << endl;
-
-        sprintf(imgPartName, "imagem%i.tif", i);
-        imgChunks[i].save_tiff(imgPartName);
-        free(imgPartName);
+                if (SUM > 255)
+                    SUM = 255;
+                if (SUM < 0)
+                    SUM = 0;
+                float newPixel = (255 - (float) (SUM));
+                px[x][y] = newPixel;
+            }
+        }
     }
 
-    CImg<unsigned char> oimage(width, height);
-    for (int j = 0; j < numCPU; j++) {
-        //oimage.draw_image(0, (j + step), sobel(imgChunks[j]));
+    CImg<float> oimage(width, height, 1, 1, 0.0);
+    for (x = 0; x < image.width(); x++) {
+        for (y = 0; y < image.height(); y++) {
+            oimage(x, y) = px[x][y];
+        }
     }
+    oimage.save_bmp("oima2ge.bmp");
 
     return 0;
 }
