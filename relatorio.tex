@@ -1,0 +1,160 @@
+\documentclass{article}
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts´
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{doi}
+\usepackage[portuguese]{babel}
+
+
+
+\title{\textit{HIGH PERFORMANCE COMPUTING}}
+
+%date{April 11, 2021}	% Here you can change the date presented in the paper title
+%\date{} 				% Or removing it
+
+\author{{\hspace{1mm}Bernardo Marques, 18373}\\
+	Instituto Politécnico de Beja\\
+	Engenharia Informática\\
+	\And
+	{\hspace{1mm}Gonçalo Amaro, 17440} \\
+	Instituto Politécnico de Beja\\
+	Engenharia Informática\\
+	\And
+	{\hspace{1mm}Hugo Silva, 16570} \\
+	Instituto Politécnico de Beja\\
+	Engenharia Informática\\
+}
+
+% Uncomment to remove the date
+%\date{}
+
+% Uncomment to override  the `A preprint' in the header
+\renewcommand{\headeright}{Relatório da seccção de \textit{HPC} da disciplina de TEI}
+\renewcommand{\undertitle}{Relatório da seccção de \textit{HPC} da disciplina de TEI}
+\renewcommand{\shorttitle}{\textit{HPC}}
+
+%%% Add PDF metadata to help others organize their library
+%%% Once the PDF is generated, you can check the metadata with
+%%% $ pdfinfo template.pdf
+\hypersetup{
+pdftitle={Relatório da seccção de HPC da disciplina de TEI},
+pdfsubject={q-bio.NC, q-bio.QM},
+pdfauthor={Bernardo Marques, Gonçalo Amaro, Hugo Silva},
+pdfkeywords={HPC, TEI, Relatório},
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Projecto que pretende demonstrar o uso da computação de alto desempenho, com um exemplo real e de um mini-projecto da detecção de contornos de \textit{Sobel} via programação \textit{multicore} em \textit{OpenMP}. 
+\end{abstract}
+
+\keywords{Contornos de \textit{Sobel} \and \textit{OpenMP}}
+
+\section{Introdução}
+O objectivo deste trabalho é clarificar o uso e o potencial da computação de elevado desempenho.
+
+Este divide-se em duas partes: uma meramente explicativa sobre um projecto real com o uso desta categoria de computação: O Projecto \textit{Kaleidoscope} da \textit{Repsol} e, seguidamente, uma apresentação clara e detalhada do mini-projecto pedido: Detecção dos contornos de \textit{Sobel} numa imagem \textit{4K} (3840 x 2160 pixeis) com programação paralela.
+
+\section{Projecto \textit{Kaleidoscope} da \textit{Repsol}}
+\textit{Kaleidoscope} é um projecto de colaboração tecnológico entre a \textit{Emerson} e a \textit{Repsol} projectado para trazer tecnologias avançadas de imagem sísmica de sub-superfície para a indústria de petróleo e gás. Como parte do projecto, a \textit{Emerson} implementará e implantará soluções avançadas de imagem de sub-superfície com base nas tecnologias centrais da \textit{Repsol}. Combinando o que há de mais moderno em visualização computacional de ponta e em computação de alto desempenho, as soluções estarão disponíveis para a comunidade de geociências da \textit{Repsol} e para todas as empresas de petróleo e gás que optem por licenciar as tecnologias, para apoiar os seus processos de transformação digital.
+
+\subsubsection{A máquina onde se processa}
+A \textit{Repsol} aliou-se ao centro de super-computação de Barcelona, Espanha, a qual disponibiliza tempo-\textit{CPU} do seu supercomputador \textit{MareNostrum}.
+
+O \textit{MareNostrum} é uma máquina com capacidade de processamento de 13.7 \textit{petaflops} e de armazenamento de 14 \textit{petabytes} e é o maior supercomputador da Península Ibérica.
+
+Este divide-se um dois blocos: um de propósito geral e um de tecnologias emergentes.
+
+O bloco principal tem 48 \textit{racks} com 3456 \textit{nodes} com um Lenovo ThinkSystem SD530, que é composto por dois Intel Xeon Platinum com 24 \textit{cores} (48 \textit{threads}) cada, um total de 165888 processadores e uma memória \textit{RAM} de 390 \textit{terabytes}.
+
+O segundo bloco (de tecnologias emergentes) é composto de três \textit{clusters}, dos quais:
+\begin{itemize}
+	\item Um é composto por \textit{racks} de \textit{GPUs}, nomeadamente racks com \textit{NVIDIA} Volta \textit{GPUs} e outros com \textit{IMP POWER9}. Este \textit{cluster} tem uma capacidade computacional de 1.5 \textit{petaflops}.
+	\item Outro composto por tecnologias da \textit{AMD}, com \textit{CPUs AMD EPYC} de arquitectura \textit{Rome} e \textit{CPUs Radeon Instinct MI50}. Este pequeno \textit{cluster} sozinho tem uma capacidade de 0.52 \textit{petaflops}, equivalente ao supercomputador \textit{Frontier} na \textit{Oak Ridge National Laboratory}.
+	\item O ultimo é composto por processadores \textit{ARMv8} desenhados para alto desempenho, contrariamente aos \textit{ARMv8} que encontramos nos nossos dispositivos \textit{mobile} (que são desenhados para o menor custo energético e térmico). Com um poder total de 0.65 \textit{petaflops}.
+\end{itemize}
+
+\subsubsection{O porquê?}
+Um \textit{survey} geológico a uma área geográfica, tem um \textit{dataset} de entre 10 a 20 \textit{terabytes}, uma pequena simulação de fluidos num computador \textit{desktop} comum, já requer algum tempo de renderização incluindo com paralelismo auxiliado pela \textit{GPU}, logo com um \textit{dataset} dessa larga escala, necessita de um outro nível de paralelismo e auxilio a algoritmos eficientes.
+
+\subsection{Como funciona?}
+É um sistema de simulação de fluidos altamente paralelizado com recurso a \textit{datasets} precisos e recentes de dados geológicos. Este divide a área de cálculo, quer o modelo seja bi ou tri-dimensional em células com percepção e comunicação entre si, onde os fluidos (cujo os mesmo são compostos de partículas) quando sua parte sai dos limites da célula e entra na célula adjacente é comunicado o seu estado e características (movimento, força, etc.).
+
+\section{Projecto Algoritmo Deteção de \textit{Sobel} paralelizado}
+O filtro \textit{Sobel} é uma operação utilizada no processamento de imagem, aplicado sobretudo em algoritmos de detecção de contornos.
+Matematicamente este operador utiliza duas matrizes 3×3 que são convolvidas com a imagem original para calcular aproximações das derivadas - uma para as variações horizontais e uma para as verticais \cite{wikipedia}.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=5cm]{x.png}
+\caption{X - Direction Kernel}
+\label{fig:x-kernel}
+\end{figure}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=5cm]{y.png}
+\caption{Y - Direction Kernel}
+\label{fig:Login}
+\end{figure}
+
+
+
+\subsection{A máquina onde se processa}
+Lenovo Legion Y530
+\begin{itemize}
+	\item CPU: Intel i5-8300H (4 Cores e 8 \textit{Threads})
+	\item GPU: Intel UHD 630 (+ NVIDIA 1050 4GB, porém desativada, no \textit{modeset})
+	\item RAM: 16GB DDR4 2666MHz
+	\item SSD: 256GB NVMe TLC
+	\item HDD: 1TB SATA
+\end{itemize}
+
+\subsection{Como funciona?}
+O Algoritmo de Deteção de Sobel calcula o gradiente da intensidade da imagem em cada pixel, dando a direcção da maior variação de claro para escuro e a quantidade de variação nessa direcção. Assim, obtém-se uma noção de como varia a luminosidade em cada pixel, de forma mais suave ou abrupta.
+
+Com isto consegue-se estimar a presença de uma transição claro-escuro e de qual a orientação desta. Como as variações claro-escuro intensas correspondem a fronteiras bem definidas entre objectos, consegue-se fazer a detecção de contornos \cite{jasnau}.
+
+\subsubsection{Como funciona? (O projecto)}
+
+Para compilar os programas usamos o comando \textit{make}, que executa o \textit{makefile}.
+Para executar os nossos executáveis, damos primeiro permissões de execução com o comando \textit{chmod +x nome\_do\_binario} e de seguida executamos com \textit{./nome\_do\_binario}.
+
+Para cronometrar as execuções usamos o comando \textit{time ./nome\_do\_binario}.
+
+\subsection{Diferença nos tempos de execução}
+Graças ao uso de paralelismo recorrendo a biblioteca OpenMP, conseguimos acelerar o processamento da imagem, tal como podemos demonstrar nas cronometragem da execução dos binários.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=15cm]{timings.png}
+\caption{Diferença entre os timings}
+\label{fig:timings}
+\end{figure}
+
+\newpage
+
+\bibliographystyle{unsrtnat}
+\begin{thebibliography}{9}
+\bibitem{wikipedia} 
+Sobel operator - Wikipedia, the free Encyclopedia
+\textit{https://en.wikipedia.org/wiki/Sobel\_operator}.
+
+\bibitem{jasnau} 
+José Jasnau Caeiro
+\textit{Aulas online da disciplina}. (2021)
+
+\end{thebibliography}
+\end{document}
