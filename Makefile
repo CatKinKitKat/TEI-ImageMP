@@ -1,4 +1,9 @@
-all: sobel
+all: sobelMulti sobelSingle
 
-sobel: sobel.cpp
-	g++ -g3 sobel.cpp -o sobel.out -lpthread -lX11
+
+sobelMulti: sobelMulti.cpp
+	g++ -g3 sobelMulti.cpp -o sobelMulti -lpthread -lX11
+
+sobelSingle: sobelSingle.cpp
+	g++ -g3 sobelSingle.cpp -o sobelSingle -lpthread -lX11
+
