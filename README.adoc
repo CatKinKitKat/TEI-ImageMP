@@ -1,0 +1,3 @@
+= TEI-ImageMP
+
+Some small partially graded assignment with C and OpenMP. It's an image processing function, I don't quite remember, but I think it's sobel countour detection.
